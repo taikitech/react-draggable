@@ -423,8 +423,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 		componentWillUnmount: function() {
 			// Remove any leftover event handlers
-			removeEvent(window, dragEventFor['move'], this.handleDrag);
-			removeEvent(window, dragEventFor['end'], this.handleDragEnd);
+			removeEvent(document, dragEventFor['move'], this.handleDrag);
+			removeEvent(document, dragEventFor['end'], this.handleDragEnd);
 		},
 	
 		componentWillReceiveProps: function(nextProps) {
@@ -517,8 +517,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			this.props.onStart(e, createUIEvent(this));
 	
 			// Add event handlers
-			addEvent(window, dragEventFor['move'], this.handleDrag);
-			addEvent(window, dragEventFor['end'], this.handleDragEnd);
+			addEvent(document, dragEventFor['move'], this.handleDrag);
+			addEvent(document, dragEventFor['end'], this.handleDragEnd);
 		},
 	
 		handleDragEnd: function (e) {
@@ -539,8 +539,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			this.props.onStop(e, createUIEvent(this));
 	
 			// Remove event handlers
-	    removeEvent(window, dragEventFor['move'], this.handleDrag);
-	    removeEvent(window, dragEventFor['end'], this.handleDragEnd);
+	    removeEvent(document, dragEventFor['move'], this.handleDrag);
+	    removeEvent(document, dragEventFor['end'], this.handleDragEnd);
 		},
 	
 		handleDrag: function (e) {
