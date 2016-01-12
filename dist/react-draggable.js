@@ -20296,78 +20296,218 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 162 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/**
+	 * Copyright 2013-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @typechecks static-only
+	 * @providesModule cloneWithProps
+	 */
+	
 	'use strict';
-	var React    = __webpack_require__(2)
-	  , hasOwn   = Object.prototype.hasOwnProperty
-	  , version  = React.version.split('.').map(parseFloat)
-	  , RESERVED = {
-	      className:  resolve(joinClasses),
-	      children:   function(){},
-	      key:        function(){},
-	      ref:        function(){},
-	      style:      resolve(extend)
-	    };
 	
-	module.exports = function cloneWithProps(child, props) {
-	  var newProps = mergeProps(props, child.props);
+	var React = __webpack_require__(2);
+	var ReactPropTransferer = __webpack_require__(163);
 	
-	  if (!hasOwn.call(newProps, 'children') && hasOwn.call(child.props, 'children'))
+	var keyOf = function (oneKeyObj) {
+	  var key;
+	  for (key in oneKeyObj) {
+	    if (!oneKeyObj.hasOwnProperty(key)) {
+	      continue;
+	    }
+	    return key;
+	  }
+	  return null;
+	};
+	
+	var CHILDREN_PROP = keyOf({ children: null });
+	
+	/**
+	 * Sometimes you want to change the props of a child passed to you. Usually
+	 * this is to add a CSS class.
+	 *
+	 * @param {ReactElement} child child element you'd like to clone
+	 * @param {object} props props you'd like to modify. className and style will be
+	 * merged automatically.
+	 * @return {ReactElement} a clone of child with props merged in.
+	 * @deprecated
+	 */
+	function cloneWithProps(child, props) {
+	  var newProps = ReactPropTransferer.mergeProps(props, child.props);
+	
+	  // Use `child.props.children` if it is provided.
+	  if (!newProps.hasOwnProperty(CHILDREN_PROP) && child.props.hasOwnProperty(CHILDREN_PROP)) {
 	    newProps.children = child.props.children;
-	
-	  // < 0.11
-	  if (version[0] === 0 && version[1] < 11)
-	    return child.constructor.ConvenienceConstructor(newProps);
-	  
-	  // 0.11
-	  if (version[0] === 0 && version[1] === 11)
-	    return child.constructor(newProps);
-	
-	  // 0.12
-	  else if (version[0] === 0 && version[1] === 12){
-	    MockLegacyFactory.isReactLegacyFactory = true
-	    MockLegacyFactory.type = child.type
-	    return React.createElement(MockLegacyFactory, newProps);
 	  }
 	
-	  // 0.13+
+	  // The current API doesn't retain _owner, which is why this
+	  // doesn't use ReactElement.cloneAndReplaceProps.
 	  return React.createElement(child.type, newProps);
-	
-	  function MockLegacyFactory(){}
 	}
 	
-	function mergeProps(currentProps, childProps) {
-	  var newProps = extend(currentProps), key
-	
-	  for (key in childProps) {
-	    if (hasOwn.call(RESERVED, key) )
-	      RESERVED[key](newProps, childProps[key], key)
-	
-	    else if ( !hasOwn.call(newProps, key) )
-	      newProps[key] = childProps[key];
-	  }
-	  return newProps
-	}
-	
-	function resolve(fn){
-	  return function(src, value, key){
-	    if( !hasOwn.call(src, key)) src[key] = value
-	    else src[key] = fn(src[key], value)
-	  }
-	}
-	
-	function joinClasses(a, b){
-	  if ( !a ) return b || ''
-	  return a + (b ? ' ' + b : '')
-	}
-	
-	function extend() {
-	  var target = {};
-	  for (var i = 0; i < arguments.length; i++) 
-	    for (var key in arguments[i]) if (hasOwn.call(arguments[i], key)) 
-	      target[key] = arguments[i][key]   
-	  return target
-	}
+	module.exports = cloneWithProps;
 
+/***/ },
+/* 163 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2013-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule ReactPropTransferer
+	 */
+	
+	'use strict';
+	
+	var emptyFunction = function(){};
+	var joinClasses = function joinClasses(className /*, ... */) {
+	  if (!className) {
+	    className = '';
+	  }
+	  var nextClass;
+	  var argLength = arguments.length;
+	  if (argLength > 1) {
+	    for (var ii = 1; ii < argLength; ii++) {
+	      nextClass = arguments[ii];
+	      if (nextClass) {
+	        className = (className ? className + ' ' : '') + nextClass;
+	      }
+	    }
+	  }
+	  return className;
+	};
+	
+	var assign = function assign(target, sources) {
+	  if (target == null) {
+	    throw new TypeError('Object.assign target cannot be null or undefined');
+	  }
+	
+	  var to = Object(target);
+	  var hasOwnProperty = Object.prototype.hasOwnProperty;
+	
+	  for (var nextIndex = 1; nextIndex < arguments.length; nextIndex++) {
+	    var nextSource = arguments[nextIndex];
+	    if (nextSource == null) {
+	      continue;
+	    }
+	
+	    var from = Object(nextSource);
+	
+	    // We don't currently support accessors nor proxies. Therefore this
+	    // copy cannot throw. If we ever supported this then we must handle
+	    // exceptions and side-effects. We don't support symbols so they won't
+	    // be transferred.
+	
+	    for (var key in from) {
+	      if (hasOwnProperty.call(from, key)) {
+	        to[key] = from[key];
+	      }
+	    }
+	  }
+	
+	  return to;
+	};
+	
+	/**
+	 * Creates a transfer strategy that will merge prop values using the supplied
+	 * `mergeStrategy`. If a prop was previously unset, this just sets it.
+	 *
+	 * @param {function} mergeStrategy
+	 * @return {function}
+	 */
+	function createTransferStrategy(mergeStrategy) {
+	  return function (props, key, value) {
+	    if (!props.hasOwnProperty(key)) {
+	      props[key] = value;
+	    } else {
+	      props[key] = mergeStrategy(props[key], value);
+	    }
+	  };
+	}
+	
+	var transferStrategyMerge = createTransferStrategy(function (a, b) {
+	  // `merge` overrides the first object's (`props[key]` above) keys using the
+	  // second object's (`value`) keys. An object's style's existing `propA` would
+	  // get overridden. Flip the order here.
+	  return assign({}, b, a);
+	});
+	
+	/**
+	 * Transfer strategies dictate how props are transferred by `transferPropsTo`.
+	 * NOTE: if you add any more exceptions to this list you should be sure to
+	 * update `cloneWithProps()` accordingly.
+	 */
+	var TransferStrategies = {
+	  /**
+	   * Never transfer `children`.
+	   */
+	  children: emptyFunction,
+	  /**
+	   * Transfer the `className` prop by merging them.
+	   */
+	  className: createTransferStrategy(joinClasses),
+	  /**
+	   * Transfer the `style` prop (which is an object) by merging them.
+	   */
+	  style: transferStrategyMerge
+	};
+	
+	/**
+	 * Mutates the first argument by transferring the properties from the second
+	 * argument.
+	 *
+	 * @param {object} props
+	 * @param {object} newProps
+	 * @return {object}
+	 */
+	function transferInto(props, newProps) {
+	  for (var thisKey in newProps) {
+	    if (!newProps.hasOwnProperty(thisKey)) {
+	      continue;
+	    }
+	
+	    var transferStrategy = TransferStrategies[thisKey];
+	
+	    if (transferStrategy && TransferStrategies.hasOwnProperty(thisKey)) {
+	      transferStrategy(props, thisKey, newProps[thisKey]);
+	    } else if (!props.hasOwnProperty(thisKey)) {
+	      props[thisKey] = newProps[thisKey];
+	    }
+	  }
+	  return props;
+	}
+	
+	/**
+	 * ReactPropTransferer are capable of transferring props to another component
+	 * using a `transferPropsTo` method.
+	 *
+	 * @class ReactPropTransferer
+	 */
+	var ReactPropTransferer = {
+	
+	  /**
+	   * Merge two props objects using TransferStrategies.
+	   *
+	   * @param {object} oldProps original props (they take precedence)
+	   * @param {object} newProps new props to merge in
+	   * @return {object} a new object containing both sets of props merged.
+	   */
+	  mergeProps: function (oldProps, newProps) {
+	    return transferInto(assign({}, oldProps), newProps);
+	  }
+	
+	};
+	
+	module.exports = ReactPropTransferer;
 
 /***/ }
 /******/ ])
