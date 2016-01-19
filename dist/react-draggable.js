@@ -130,14 +130,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	// @credits: http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript/4819886#4819886
 	/* Conditional to fix node server side rendering of component */
-	if (typeof window === 'undefined') {
-	    // Do Node Stuff
-	    var isTouchDevice = false;
-	} else {
-	    // Do Browser Stuff
-	    var isTouchDevice = 'ontouchstart' in window || // works on most browsers
-	      'onmsgesturechange' in window; // works on ie10 on ms surface
-	}
+	// if (typeof window === 'undefined') {
+	//     // Do Node Stuff
+	//     var isTouchDevice = false;
+	// } else {
+	//     // Do Browser Stuff
+	//     var isTouchDevice = 'ontouchstart' in window || // works on most browsers
+	//       'onmsgesturechange' in window; // works on ie10 on ms surface
+	// }
+	
+	// Disable touch devices for now as the logic breaks IE 11
+	var isTouchDevice = false;
 	
 	// look ::handleDragStart
 	//function isMultiTouch(e) {
